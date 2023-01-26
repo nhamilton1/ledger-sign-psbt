@@ -18,7 +18,7 @@ const LedgerImportButton: React.FC = () => {
   });
 
   const other_key_info =
-    "[099a0a08/84'/1'/0']tpubDC2bnFMJeVXBHzkAXMRa27nbT1mavjEEU8YguSTzBgfpbGYDNDkj9VEXX5SeGrJKwZ4LHpHSXyjjVGoodCNy6gnG4qmmtJTHTMw8G2MFkVt";
+    "[9a6a2580/84'/1'/0']tpubDCMRAYcH71Gagskm7E5peNMYB5sKaLLwtn2c4Rb3CMUTRVUk5dkpsskhspa5MEcVZ11LwTcM7R5mzndUCG9WabYcT5hfQHbYVoaLFBZHPCi";
 
   const handleClick = async () => {
     setLoading(true);
@@ -40,8 +40,8 @@ const LedgerImportButton: React.FC = () => {
 
       setShowSuccessMessage(true);
 
-      const name = "Test Miniscript wallet";
-      const description_template = "wsh(and_v(v:pk(@0/**),pk(@1/**)))";
+      const name = "Ledger PSBT Bounty";
+      const description_template = "wsh(and_v(v:pk(@1/**),and_v(v:pk(@0/**),after(50))))";
 
       const our_key_info = `[${fingerprint}/84'/1'/0']${xpub}`;
       const keys = [our_key_info, other_key_info];
@@ -55,7 +55,7 @@ const LedgerImportButton: React.FC = () => {
       console.assert(policyId.compare(policy_map.getId()) == 0);
 
       const rawPsbtBase64: string | Buffer =
-        "cHNidP8BAFMBAAAAAcyNsrwbeS+JQDFtE8cy5gkqlVTvYCuOCVVlLTXaelEXAQAAAAD+////AVwDAAAAAAAAF6kUBRnBIpsaszQf8OTCAzpZf1+rQMmHYc8kAAABAOoCAAAAAAEBg3SoIUfy3fPDzxG+LyTKCeNJDsexAC5sIkDWhsxOetkBAAAAAP7///8CJEYIAAAAAAAWABQvS+kMSfxAQMiZ+pO3TCPNTZ5UQ+gDAAAAAAAAIgAgo8UjqAxJ/XI4WI8+KV/owvwxTaR7spegvO3ZFQSeHYYCRzBEAiBvB8vi7rdOw8KD5owM94Ij8dn2h/xk4Lr/TM+Bru0pDAIgZ30YTLkZDoShqviB3jOEdaaFOrzRjM71DM9znQln94kBIQLnvIh6f9DObva+NIbgEUeu7Z4gXbv+p7dE2klmk4oF6mHPJAABASvoAwAAAAAAACIAIKPFI6gMSf1yOFiPPilf6ML8MU2ke7KXoLzt2RUEnh2GAQVMIQMukuwdMXUzT01WNx6C0XZKTa9SNfKYd3FjWnYES9ibIKxkATKxaWghA1xDGSGBxoN5JLy7YiuAHssvPvabh3cu6N0UAhFf2ermrCIGAy6S7B0xdTNPTVY3HoLRdkpNr1I18ph3cWNadgRL2JsgGAmaCghUAACAAQAAgAAAAIAAAAAAAAAAACIGA1xDGSGBxoN5JLy7YiuAHssvPvabh3cu6N0UAhFf2ermGCJzlFVUAACAAQAAgAAAAIAAAAAAAAAAAAAA";
+        "cHNidP8BAFMBAAAAAZ6r9esWDazcxZv1tbR0/QWtEgH8Esb4xoSvgO2yWH3fAAAAAAD+////ATNkCQAAAAAAF6kUBRnBIpsaszQf8OTCAzpZf1+rQMmH3eQkAAABAP0CAQIAAAAAAQFWX8KQgh0QkvqXoNYYEdPQvq9XXGcX2Sgm79ZK8Nk/uQEAAAAXFgAUHmqjLrEuyBL5vB1jTTKI5OD6kjf9////Ar9kCQAAAAAAIgAgUHtuaBQJ8XGM6Hth+C2B3fFUtKlF0JYxyUhkrD8QRXYQBQcAAAAAABepFDWT5u7TM5WVpWgg8SDWAy7UC5ImhwJHMEQCIHU8PA7fFrbtgBDOhC1fWyPE0gTaahs687YKjDQ6vkM7AiA/08hU4FHovuI5acLV1On+DprHZgNVxdOsC5LDdo259AEhAzAXY27FJMg1x+d3pIgLNF5DcUXBa19riXR4QDtjuA6Y3eQkAAEBK79kCQAAAAAAIgAgUHtuaBQJ8XGM6Hth+C2B3fFUtKlF0JYxyUhkrD8QRXYBBUkhA52U/v/31tZxTnZaCxYp2L1yXTIU1TBYdSmiBsonzUiYrSEC+qfzDbm8tpZSARvT/ki4+QSp8SXVHivmSvH+FdT3QImtATKxIgYC+qfzDbm8tpZSARvT/ki4+QSp8SXVHivmSvH+FdT3QIkYErSnDVQAAIABAACAAAAAgAAAAAAAAAAAIgYDnZT+//fW1nFOdloLFinYvXJdMhTVMFh1KaIGyifNSJgYmmolgFQAAIABAACAAAAAgAAAAAAAAAAAAAA=";
 
       const rawPsbtBuffer = Buffer.from(rawPsbtBase64, "base64");
 
@@ -75,7 +75,7 @@ const LedgerImportButton: React.FC = () => {
 
       console.log("ledger made psbt", psbt);
 
-      debugger;
+      // debugger;
       const result = await app.signPsbt(psbt, policy_map, policyHmac, () => {
         console.log("signing input");
         return;
