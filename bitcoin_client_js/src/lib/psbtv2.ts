@@ -349,6 +349,13 @@ export class PsbtV2 {
     });
     return buf.buffer();
   }
+  remove_flags() {
+    this.globalMap.forEach((v, k) => {
+      if (v.byteLength <= 1) {
+        this.globalMap.delete(k);
+      }
+    });
+  }
   deserialize(psbt: Buffer) {
     const buf = new BufferReader(psbt);
     if (!buf.readSlice(5).equals(PSBT_MAGIC_BYTES)) {
@@ -560,9 +567,10 @@ function createKey(buf: Buffer): Key {
   return new Key(buf.readUInt8(0), buf.slice(1));
 }
 function serializeMap(buf: BufferWriter, map: ReadonlyMap<string, Buffer>) {
-  for (const k in map.keys) {
-    const value = map.get(k)!;
-    const keyPair = new KeyPair(createKey(Buffer.from(k, 'hex')), value);
+  for (const key of map.keys()) {
+    const value = map.get(key)!;
+    console.log(key, value.toString('hex'));
+    const keyPair = new KeyPair(createKey(Buffer.from(key, 'hex')), value);
     keyPair.serialize(buf);
   }
   buf.writeUInt8(0);
