@@ -7,6 +7,13 @@ const LedgerImportButton: React.FC = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [psbtBase64BeforeSig, setPsbtBase64BeforeSig] = useState<string | null>(
+    null
+  );
+  const [psbtBase64AfterSig, setPsbtBase64AfterSig] = useState<string | null>(
+    null
+  );
+  const [signature, setSignature] = useState<string | null>(null);
   const [ledgerData, setLedgerData] = useState<{
     fingerprint: string;
     derivation_path: string;
@@ -41,7 +48,8 @@ const LedgerImportButton: React.FC = () => {
       setShowSuccessMessage(true);
 
       const name = "Ledger PSBT Bounty";
-      const description_template = "wsh(and_v(or_c(pk(@1/**),v:older(5)),pk(@0/**)))";
+      const description_template =
+        "wsh(and_v(or_c(pk(@1/**),v:older(5)),pk(@0/**)))";
 
       const our_key_info = `[${fingerprint}/84'/1'/0']${xpub}`;
       const keys = [our_key_info, other_key_info];
@@ -73,17 +81,23 @@ const LedgerImportButton: React.FC = () => {
         return;
       }
 
-      console.log("ledger made psbt", psbt);
+      const psbt64BeforeSign = psbt.serialize().toString("base64");
+      setPsbtBase64BeforeSig(psbt64BeforeSign);
 
-      // debugger;
       const result = await app.signPsbt(psbt, policy_map, policyHmac, () => {
         console.log("signing input");
         return;
       });
 
-      console.log("signatures: ", result);
+      const signature = result[0]?.[2].toString("hex") ?? null;
+      const psbt64 = psbt.serialize().toString("base64");
 
+      setSignature(signature);
+      setPsbtBase64AfterSig(psbt64);
+
+      console.log("ledger made psbt", psbt);
       setLoading(false);
+      transport.close();
     } catch (err) {
       if (err instanceof Error) {
         console.log(err);
@@ -99,20 +113,56 @@ const LedgerImportButton: React.FC = () => {
 
   return (
     <div className="flex w-full max-w-4xl flex-col-reverse items-center justify-center gap-4 text-white md:flex-row md:justify-evenly md:gap-0">
-      <div className="flex w-full flex-col">
-        <p className="text-center">
-          [*wallet fingerprint ID* | *derivation path*]xpub
-        </p>
-        <div className="w-full rounded bg-slate-900 p-5 ring-1 ring-slate-900/10">
-          <div className="flex h-full max-w-xl flex-col items-center justify-center rounded bg-slate-500 md:h-24">
-            {!!ledgerData.xpub && (
-              <p className="max-w-md break-all">
-                [{ledgerData.fingerprint}/{ledgerData.derivation_path}]
-                {ledgerData.xpub}
-              </p>
-            )}
+      <div className="flex w-full flex-col gap-4">
+        {!!ledgerData.xpub && (
+          <div>
+            <p className="text-center">
+              [*wallet fingerprint ID* | *derivation path*]xpub
+            </p>
+            <div className="w-full rounded bg-slate-900 p-5 ring-1 ring-slate-900/10">
+              <div className="flex h-full max-w-xl flex-col items-center justify-center rounded bg-slate-500 md:h-24">
+                <p className="max-w-md break-all">
+                  [{ledgerData.fingerprint}/{ledgerData.derivation_path}]
+                  {ledgerData.xpub}
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
+        {!!psbtBase64BeforeSig && (
+          <div>
+            <p className="text-center">
+              PSBT Before Ledger Signature (Base64 Encoded)
+            </p>
+            <div className="w-full rounded bg-slate-900 p-5 ring-1 ring-slate-900/10">
+              <div className="h-20 overflow-auto bg-slate-500 px-2">
+                <p className="break-all">{psbtBase64BeforeSig}</p>
+              </div>
+            </div>
+          </div>
+        )}
+        {!!signature && (
+          <div>
+            <p className="text-center">Signature (Hex Encoded)</p>
+            <div className="w-full rounded bg-slate-900 p-5 ring-1 ring-slate-900/10">
+              <div className="flex h-full flex-col items-center justify-center rounded bg-slate-500">
+                <p className="max-w-md break-all">{signature}</p>
+              </div>
+            </div>
+          </div>
+        )}
+        {!!psbtBase64AfterSig && (
+          <div>
+            <p className="text-center">
+              PSBT After Ledger Signature (Base64 Encoded)
+            </p>
+            <div className="w-full rounded bg-slate-900 p-5 ring-1 ring-slate-900/10">
+              <div className="h-20 overflow-auto bg-slate-500 px-2">
+                <p className="break-all">{psbtBase64AfterSig}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       <div className="flex w-full max-w-xs flex-col items-center justify-center">
         {!!errorMessage && (
