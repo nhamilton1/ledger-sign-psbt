@@ -568,8 +568,12 @@ function createKey(buf: Buffer): Key {
 }
 function serializeMap(buf: BufferWriter, map: ReadonlyMap<string, Buffer>) {
   for (const key of map.keys()) {
-    const value = map.get(key)!;
+    const value = map.get(key);
     console.log(key, value.toString('hex'));
+    // if (value.byteLength > 5) {
+    //   const keyPair = new KeyPair(createKey(Buffer.from(key, 'hex')), value);
+    //   keyPair.serialize(buf);
+    // }
     const keyPair = new KeyPair(createKey(Buffer.from(key, 'hex')), value);
     keyPair.serialize(buf);
   }
