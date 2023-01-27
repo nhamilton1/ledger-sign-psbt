@@ -41,7 +41,7 @@ const LedgerImportButton: React.FC = () => {
       setShowSuccessMessage(true);
 
       const name = "Ledger PSBT Bounty";
-      const description_template = "wsh(and_v(v:pk(@1/**),and_v(v:pk(@0/**),after(50))))";
+      const description_template = "wsh(and_v(or_c(pk(@1/**),v:older(5)),pk(@0/**)))";
 
       const our_key_info = `[${fingerprint}/84'/1'/0']${xpub}`;
       const keys = [our_key_info, other_key_info];
@@ -55,7 +55,7 @@ const LedgerImportButton: React.FC = () => {
       console.assert(policyId.compare(policy_map.getId()) == 0);
 
       const rawPsbtBase64: string | Buffer =
-        "cHNidP8BAFMBAAAAAZ6r9esWDazcxZv1tbR0/QWtEgH8Esb4xoSvgO2yWH3fAAAAAAD+////ATNkCQAAAAAAF6kUBRnBIpsaszQf8OTCAzpZf1+rQMmH3eQkAAABAP0CAQIAAAAAAQFWX8KQgh0QkvqXoNYYEdPQvq9XXGcX2Sgm79ZK8Nk/uQEAAAAXFgAUHmqjLrEuyBL5vB1jTTKI5OD6kjf9////Ar9kCQAAAAAAIgAgUHtuaBQJ8XGM6Hth+C2B3fFUtKlF0JYxyUhkrD8QRXYQBQcAAAAAABepFDWT5u7TM5WVpWgg8SDWAy7UC5ImhwJHMEQCIHU8PA7fFrbtgBDOhC1fWyPE0gTaahs687YKjDQ6vkM7AiA/08hU4FHovuI5acLV1On+DprHZgNVxdOsC5LDdo259AEhAzAXY27FJMg1x+d3pIgLNF5DcUXBa19riXR4QDtjuA6Y3eQkAAEBK79kCQAAAAAAIgAgUHtuaBQJ8XGM6Hth+C2B3fFUtKlF0JYxyUhkrD8QRXYBBUkhA52U/v/31tZxTnZaCxYp2L1yXTIU1TBYdSmiBsonzUiYrSEC+qfzDbm8tpZSARvT/ki4+QSp8SXVHivmSvH+FdT3QImtATKxIgYC+qfzDbm8tpZSARvT/ki4+QSp8SXVHivmSvH+FdT3QIkYErSnDVQAAIABAACAAAAAgAAAAAAAAAAAIgYDnZT+//fW1nFOdloLFinYvXJdMhTVMFh1KaIGyifNSJgYmmolgFQAAIABAACAAAAAgAAAAAAAAAAAAAA=";
+        "cHNidP8BAFMBAAAAAY+G1NL1n96WC88aGpxMV7Rj+l7Bp7LYZcNbSC1dnjwQAAAAAAD+////AYQmAAAAAAAAF6kUBRnBIpsaszQf8OTCAzpZf1+rQMmHCeUkAAABAP0CAQIAAAAAAQGzoox1YhaYtK64X+8r+Wx81MvbrUogsYjM0NM40d8jGgEAAAAXFgAU5VzquRhTOMekY/DDmaOJ/izmnpT9////AhAnAAAAAAAAIgAgXC0bh2RNhhRSfnFXI1iuPWDDJ5wH48yjLlp9GBg1SSptFwMAAAAAABepFDLEQFzCw7ju4cqv8Ae8uL9KTSPGhwJHMEQCICO2qmAj0hh0m2NMkYYtXne0jymhuOfSVkERJdxnr3ocAiBNA5pLqECCxSDEWmrTIfDJsgDo+7j5urg344LHW0OElwEhA5nHzjpnBXAGd9XnHfE7THtWTEU0r2B8cqN4nPfoqUEVCeUkAAEBKxAnAAAAAAAAIgAgXC0bh2RNhhRSfnFXI1iuPWDDJ5wH48yjLlp9GBg1SSoBBUshA52U/v/31tZxTnZaCxYp2L1yXTIU1TBYdSmiBsonzUiYrGRVsmloIQL6p/MNuby2llIBG9P+SLj5BKnxJdUeK+ZK8f4V1PdAiawiBgL6p/MNuby2llIBG9P+SLj5BKnxJdUeK+ZK8f4V1PdAiRgStKcNVAAAgAEAAIAAAACAAAAAAAAAAAAiBgOdlP7/99bWcU52WgsWKdi9cl0yFNUwWHUpogbKJ81ImBiaaiWAVAAAgAEAAIAAAACAAAAAAAAAAAAAAA==";
 
       const rawPsbtBuffer = Buffer.from(rawPsbtBase64, "base64");
 
