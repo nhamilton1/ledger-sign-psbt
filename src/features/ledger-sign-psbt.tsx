@@ -18,7 +18,8 @@ const LedgerImportButton: React.FC = () => {
   });
 
   const other_key_info =
-    "[12b4a70d/84'/1'/0']tpubDC6RYke2oWqmkt7UZrQiADdkT66fyJFRZMUWoHcD2W92BK6y7ZBS8oLRw6W66epPqPVisVFBnuCX214yieV2cq9jxdEYe1QJxxNoYZEi6Fb";
+    // "[3a686ab9/84'/1'/0']tpubDDAf2xGr2RqMHQwJBaYqYDr4dA3pYtgM1aCw9PeHSoUEQd9RYPKcjvZW42QT2cvNHHxa74NYcfw3jbyfZGWWwFJNWYHqXRVkp32jG2q1UjB";
+    "[8e5bcd7a/84'/1'/0']tpubDD5FsPbrdeBpE6ep19fTwr5hLjzZfPigoXuDyNu5PZk1irT5myjD47AgSXALYAqX6vKp9eRW41MHGwrvCuTKJcMPVQmBVbqg1V1sbbVtzdV";
 
   const handleClick = async () => {
     setLoading(true);
@@ -41,22 +42,29 @@ const LedgerImportButton: React.FC = () => {
       setShowSuccessMessage(true);
 
       const name = "Ledger PSBT Bounty";
+      // change the 1 or 0 depending on the key
       const description_template =
-        "wsh(and_v(v:pk(@0/**),and_v(v:pk(@1/**),after(50))))";
+        "wsh(and_v(v:pk(@1/**),and_v(v:pk(@0/**),after(5))))";
 
       const our_key_info = `[${fingerprint}/84'/1'/0']${xpub}`;
       const keys = [our_key_info, other_key_info];
 
       const policy_map = new WalletPolicy(name, description_template, keys);
 
-      const [policyId, policyHmac] = await app.registerWallet(policy_map);
+      const [, policyHmac] = await app.registerWallet(policy_map);
 
-      console.log(`Policy id: ${policyId.toString("hex")}`);
-      console.log(`Policy hmac: ${policyHmac.toString("hex")}`);
-      console.assert(policyId.compare(policy_map.getId()) == 0);
+      // console.log(`Policy id: ${policyId.toString("hex")}`);
+      // console.log(`Policy hmac: ${policyHmac.toString("hex")}`);
+      // console.assert(policyId.compare(policy_map.getId()) == 0);
+
+      // const policyHmac = Buffer.from(
+      //   "945dad27e4a3ec009a49390ae8ba677f600fb6ad6e1608282574021170bb74e3",
+      //   "hex"
+      // ); //for 8e5
 
       const rawPsbtBase64: string | Buffer =
-        "cHNidP8BAFMBAAAAASSFuluan2GLR8B819S6UXo75QFJqesZezbWISPMSTlmAQAAAAD+////AbXhAQAAAAAAF6kUBRnBIpsaszQf8OTCAzpZf1+rQMmH9uQkAAABAP1YAgIAAAAAAQPmA8+Zdui9CXjMAhQvIMvIx3vIhduiITiWhJx4npMpUAEAAAAXFgAUz9xdxZnAPuBoxEvqdSg9bgOwEKb9////SKV1hoYnfGNbeE44EFAtPlIXUY+PQwI+oS341FvDSXUBAAAAFxYAFNCd1dl55eO/lA34ETFr7aPEOrLC/f///93UzXOYKZVpudj0RPhO8gpkVTCqcossxbsGW+wgtUZVAQAAABcWABStkqHTikwZJjbYUyGJHtbFwmR1kv3///8CzOQCAAAAAAAXqRQR2pDTPMv6klkOYN9BXlexcVKD84dA4gEAAAAAACIAIK8Xs4dHktMZIgjKOivE6YO2+R0zKPBJuAliaLsXro4HAkcwRAIhAPQzEBmg4HY7GAUL+7tgtpNHQVKFp34tnIaJrSfL7QOAAh8QfEhOcMn+fJt6gRlGuVbgwZrYlPI5lEPF0GDCglTdASECgXVIDV32MBzqyclQh3HvdlQf7m3ox6+XYpY+y5ClnZsCRzBEAiA/r5LWhnQyPrbTiNDiCm9K+yNuwm/ttKDveml8QzkrRwIgC1QUKaZXsNQFDAw6acp6sETzz5XKdUPGb2SI0OQWDsUBIQIqyibaXeAjvuUkJ7iUlm2fB9MbRFZw9iZTehA4+NB5bQJHMEQCIFXSOqTGUEqHMYmilmWlhRvtesWezfBXeCxfc2i/VAK7AiAeuB/i+cUhTx9WUUTLyLA7A5nRf+dA0s6r53vQqA/GjQEhAw4e6ocg+StAFLteXQEvziGfan0nYVaRLs+z6O7J1kRp9uQkAAEBK0DiAQAAAAAAIgAgrxezh0eS0xkiCMo6K8Tpg7b5HTMo8Em4CWJouxeujgcBBUghA52U/v/31tZxTnZaCxYp2L1yXTIU1TBYdSmiBsonzUiYrSEC+qfzDbm8tpZSARvT/ki4+QSp8SXVHivmSvH+FdT3QImtVbEiBgL6p/MNuby2llIBG9P+SLj5BKnxJdUeK+ZK8f4V1PdAiRgStKcNVAAAgAEAAIAAAACAAAAAAAAAAAAiBgOdlP7/99bWcU52WgsWKdi9cl0yFNUwWHUpogbKJ81ImBiaaiWAVAAAgAEAAIAAAACAAAAAAAAAAAAAAA==";
+        "cHNidP8BBAEBAQUBAQEAUwEAAAABEObMgb07YsCg5fxWhvdmZ6EpQFJIj0tGZKbC1eqnc0AAAAAAAP7///8BteEBAAAAAAAXqRQFGcEimxqzNB/w5MIDOll/X6tAyYf35CQAAfsEAAAAAAECBAEAAAAAAQD9AgECAAAAAAEBnqv16xYNrNzFm/W1tHT9Ba0SAfwSxvjGhK+A7bJYfd8BAAAAFxYAFBXWx0wOhnPf456XDapK2IcsAWUH/f///wJA4gEAAAAAACIAIAeX7X30eiP2zOjdlKm8O8o5Y/Dkguj17X+6hD3W3LXHHyIFAAAAAAAXqRT3oWylvWAzAH9LgfNJh3O6eJYqTocCRzBEAiAEmttBfTOfhB1Haa8n8F5Y+jv5I8yXSwZAp15mZuJ0dgIgMwMF23RP1i5uE6c9YWU1791mYv++psWwtRfQkawRO88BIQJJhZB+6ol5jwhN2R1/0fBMiFb2M1NzIPOGGoqL5SJhU/fkJAABAStA4gEAAAAAACIAIAeX7X30eiP2zOjdlKm8O8o5Y/Dkguj17X+6hD3W3LXHAQVIIQPD8ISUU8P3DZH4fKcQnPjGMJVRQNbadjOceLWMXRGaPa0hApdTYuBIGsnMZb79FbMDtEJMq307wNLr72ecnkl/ZdfarVWxIgYCl1Ni4Egaycxlvv0VswO0QkyrfTvA0uvvZ5yeSX9l19oYOmhquVQAAIABAACAAAAAgAAAAAAAAAAAIgYDw/CElFPD9w2R+HynEJz4xjCVUUDW2nYznHi1jF0Rmj0YjlvNelQAAIABAACAAAAAgAAAAAAAAAAAAQ4gEObMgb07YsCg5fxWhvdmZ6EpQFJIj0tGZKbC1eqnc0ABEAT+////AQ8EAAAAACICA8PwhJRTw/cNkfh8pxCc+MYwlVFA1tp2M5x4tYxdEZo9RzBEAiAlyiPb6sOHjhmF1PF7lnk6sW7YOyyUHKCHFbT1FvIYUwIgXR+nRQwmFrcS1bmcfdfHc8Na1c6TGXKUGLrH6CGJws4BAAEDCLXhAQAAAAAAAQQXqRQFGcEimxqzNB/w5MIDOll/X6tAyYcA";
+
       const rawPsbtBuffer = Buffer.from(rawPsbtBase64, "base64");
 
       // Deserialize the raw PSBT
@@ -85,7 +93,7 @@ const LedgerImportButton: React.FC = () => {
 
       psbt.setInputPartialSig(0, pubkey as Buffer, signature as Buffer);
 
-      console.log(psbt.serialize().toString("hex"));
+      console.log(psbt.serialize().toString("base64"));
 
       setLoading(false);
     } catch (err) {
