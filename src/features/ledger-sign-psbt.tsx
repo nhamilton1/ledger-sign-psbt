@@ -204,7 +204,7 @@ const bitcoinlib_js_to_ledger = (psbtv0: Psbt) => {
   psbtv2.setGlobalInputCount(inputCount);
   psbtv2.setGlobalOutputCount(outputCount);
   psbtv2.deserialize(psbtv0.toBuffer());
-  psbtv2.setGlobalPsbtVersion(0);
+  psbtv2.setGlobalPsbtVersion(2);
   psbtv2.setGlobalTxVersion(psbtv0.version);
   psbtv0.txInputs.forEach((input) => {
     psbtv2.setInputPreviousTxId(input.index, input.hash);
