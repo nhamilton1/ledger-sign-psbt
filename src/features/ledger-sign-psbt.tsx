@@ -24,8 +24,12 @@ const LedgerImportButton: React.FC = () => {
     xpub: "",
   });
 
+  // const other_key_info =
+  //   "[9a6a2580/84'/1'/0']tpubDCMRAYcH71Gagskm7E5peNMYB5sKaLLwtn2c4Rb3CMUTRVUk5dkpsskhspa5MEcVZ11LwTcM7R5mzndUCG9WabYcT5hfQHbYVoaLFBZHPCi";
+
   const other_key_info =
-    "[9a6a2580/84'/1'/0']tpubDCMRAYcH71Gagskm7E5peNMYB5sKaLLwtn2c4Rb3CMUTRVUk5dkpsskhspa5MEcVZ11LwTcM7R5mzndUCG9WabYcT5hfQHbYVoaLFBZHPCi";
+    "[3a686ab9/84'/1'/0']tpubDDAf2xGr2RqMHQwJBaYqYDr4dA3pYtgM1aCw9PeHSoUEQd9RYPKcjvZW42QT2cvNHHxa74NYcfw3jbyfZGWWwFJNWYHqXRVkp32jG2q1UjB";
+  // "[8e5bcd7a/84'/1'/0']tpubDD5FsPbrdeBpE6ep19fTwr5hLjzZfPigoXuDyNu5PZk1irT5myjD47AgSXALYAqX6vKp9eRW41MHGwrvCuTKJcMPVQmBVbqg1V1sbbVtzdV";
 
   const handleClick = async () => {
     setLoading(true);
@@ -48,22 +52,34 @@ const LedgerImportButton: React.FC = () => {
       setShowSuccessMessage(true);
 
       const name = "Ledger PSBT Bounty";
-      const description_template =
-        "wsh(and_v(or_c(pk(@1/**),v:older(5)),pk(@0/**)))";
 
-      const our_key_info = `[${fingerprint}/84'/1'/0']${xpub}`;
-      const keys = [our_key_info, other_key_info];
+      //signing with 8e5
+      const description_template =
+        "wsh(and_v(v:pk(@0/**),and_v(v:pk(@1/**),after(5))))"; // signing with 8e5
+
+      // const our_key_info = `[${fingerprint}/84'/1'/0']${xpub}`;
+      // const keys = [our_key_info, other_key_info];
+
+      const keys = [
+        "[8e5bcd7a/84'/1'/0']tpubDD5FsPbrdeBpE6ep19fTwr5hLjzZfPigoXuDyNu5PZk1irT5myjD47AgSXALYAqX6vKp9eRW41MHGwrvCuTKJcMPVQmBVbqg1V1sbbVtzdV",
+        "[3a686ab9/84'/1'/0']tpubDDAf2xGr2RqMHQwJBaYqYDr4dA3pYtgM1aCw9PeHSoUEQd9RYPKcjvZW42QT2cvNHHxa74NYcfw3jbyfZGWWwFJNWYHqXRVkp32jG2q1UjB",
+      ];
 
       const policy_map = new WalletPolicy(name, description_template, keys);
 
-      const [policyId, policyHmac] = await app.registerWallet(policy_map);
+      // const [policyId, policyHmac] = await app.registerWallet(policy_map);
 
-      console.log(`Policy id: ${policyId.toString("hex")}`);
-      console.log(`Policy hmac: ${policyHmac.toString("hex")}`);
-      console.assert(policyId.compare(policy_map.getId()) == 0);
+      // console.log(`Policy id: ${policyId.toString("hex")}`);
+      // console.log(`Policy hmac: ${policyHmac.toString("hex")}`);
+      // console.assert(policyId.compare(policy_map.getId()) == 0);
+
+      const policyHmac = Buffer.from(
+        "945dad27e4a3ec009a49390ae8ba677f600fb6ad6e1608282574021170bb74e3",
+        "hex"
+      ); //for 8e5
 
       const rawPsbtBase64: string | Buffer =
-        "cHNidP8BAFMBAAAAAY+G1NL1n96WC88aGpxMV7Rj+l7Bp7LYZcNbSC1dnjwQAAAAAAD+////AYQmAAAAAAAAF6kUBRnBIpsaszQf8OTCAzpZf1+rQMmHCeUkAAABAP0CAQIAAAAAAQGzoox1YhaYtK64X+8r+Wx81MvbrUogsYjM0NM40d8jGgEAAAAXFgAU5VzquRhTOMekY/DDmaOJ/izmnpT9////AhAnAAAAAAAAIgAgXC0bh2RNhhRSfnFXI1iuPWDDJ5wH48yjLlp9GBg1SSptFwMAAAAAABepFDLEQFzCw7ju4cqv8Ae8uL9KTSPGhwJHMEQCICO2qmAj0hh0m2NMkYYtXne0jymhuOfSVkERJdxnr3ocAiBNA5pLqECCxSDEWmrTIfDJsgDo+7j5urg344LHW0OElwEhA5nHzjpnBXAGd9XnHfE7THtWTEU0r2B8cqN4nPfoqUEVCeUkAAEBKxAnAAAAAAAAIgAgXC0bh2RNhhRSfnFXI1iuPWDDJ5wH48yjLlp9GBg1SSoBBUshA52U/v/31tZxTnZaCxYp2L1yXTIU1TBYdSmiBsonzUiYrGRVsmloIQL6p/MNuby2llIBG9P+SLj5BKnxJdUeK+ZK8f4V1PdAiawiBgL6p/MNuby2llIBG9P+SLj5BKnxJdUeK+ZK8f4V1PdAiRgStKcNVAAAgAEAAIAAAACAAAAAAAAAAAAiBgOdlP7/99bWcU52WgsWKdi9cl0yFNUwWHUpogbKJ81ImBiaaiWAVAAAgAEAAIAAAACAAAAAAAAAAAAAAA==";
+        "cHNidP8BAFMBAAAAARDmzIG9O2LAoOX8Vob3ZmehKUBSSI9LRmSmwtXqp3NAAAAAAAD+////AbXhAQAAAAAAF6kUBRnBIpsaszQf8OTCAzpZf1+rQMmH9+QkAAABAP0CAQIAAAAAAQGeq/XrFg2s3MWb9bW0dP0FrRIB/BLG+MaEr4Dtslh93wEAAAAXFgAUFdbHTA6Gc9/jnpcNqkrYhywBZQf9////AkDiAQAAAAAAIgAgB5ftffR6I/bM6N2Uqbw7yjlj8OSC6PXtf7qEPdbctccfIgUAAAAAABepFPehbKW9YDMAf0uB80mHc7p4lipOhwJHMEQCIASa20F9M5+EHUdpryfwXlj6O/kjzJdLBkCnXmZm4nR2AiAzAwXbdE/WLm4Tpz1hZTXv3WZi/76mxbC1F9CRrBE7zwEhAkmFkH7qiXmPCE3ZHX/R8EyIVvYzU3Mg84YaiovlImFT9+QkAAEBK0DiAQAAAAAAIgAgB5ftffR6I/bM6N2Uqbw7yjlj8OSC6PXtf7qEPdbctccBBUghA8PwhJRTw/cNkfh8pxCc+MYwlVFA1tp2M5x4tYxdEZo9rSECl1Ni4Egaycxlvv0VswO0QkyrfTvA0uvvZ5yeSX9l19qtVbEiBgKXU2LgSBrJzGW+/RWzA7RCTKt9O8DS6+9nnJ5Jf2XX2hg6aGq5VAAAgAEAAIAAAACAAAAAAAAAAAAiBgPD8ISUU8P3DZH4fKcQnPjGMJVRQNbadjOceLWMXRGaPRiOW816VAAAgAEAAIAAAACAAAAAAAAAAAAAAA==";
 
       const rawPsbtBuffer = Buffer.from(rawPsbtBase64, "base64");
 
@@ -204,7 +220,7 @@ const getPSBTv2Fromv0 = (psbtv0: Psbt) => {
   psbtv2.setGlobalInputCount(inputCount);
   psbtv2.setGlobalOutputCount(outputCount);
   psbtv2.deserialize(psbtv0.toBuffer());
-  psbtv2.setGlobalPsbtVersion(0);
+  psbtv2.setGlobalPsbtVersion(2);
   psbtv2.setGlobalTxVersion(psbtv0.version);
   psbtv0.txInputs.forEach((input) => {
     psbtv2.setInputPreviousTxId(input.index, input.hash);
@@ -217,3 +233,9 @@ const getPSBTv2Fromv0 = (psbtv0: Psbt) => {
   });
   return psbtv2;
 };
+
+// psbt for 3a6 and 8e5
+// cHNidP8BAFMBAAAAARDmzIG9O2LAoOX8Vob3ZmehKUBSSI9LRmSmwtXqp3NAAAAAAAD+////AbXhAQAAAAAAF6kUBRnBIpsaszQf8OTCAzpZf1+rQMmH9+QkAAABAP0CAQIAAAAAAQGeq/XrFg2s3MWb9bW0dP0FrRIB/BLG+MaEr4Dtslh93wEAAAAXFgAUFdbHTA6Gc9/jnpcNqkrYhywBZQf9////AkDiAQAAAAAAIgAgB5ftffR6I/bM6N2Uqbw7yjlj8OSC6PXtf7qEPdbctccfIgUAAAAAABepFPehbKW9YDMAf0uB80mHc7p4lipOhwJHMEQCIASa20F9M5+EHUdpryfwXlj6O/kjzJdLBkCnXmZm4nR2AiAzAwXbdE/WLm4Tpz1hZTXv3WZi/76mxbC1F9CRrBE7zwEhAkmFkH7qiXmPCE3ZHX/R8EyIVvYzU3Mg84YaiovlImFT9+QkAAEBK0DiAQAAAAAAIgAgB5ftffR6I/bM6N2Uqbw7yjlj8OSC6PXtf7qEPdbctccBBUghA8PwhJRTw/cNkfh8pxCc+MYwlVFA1tp2M5x4tYxdEZo9rSECl1Ni4Egaycxlvv0VswO0QkyrfTvA0uvvZ5yeSX9l19qtVbEiBgKXU2LgSBrJzGW+/RWzA7RCTKt9O8DS6+9nnJ5Jf2XX2hg6aGq5VAAAgAEAAIAAAACAAAAAAAAAAAAiBgPD8ISUU8P3DZH4fKcQnPjGMJVRQNbadjOceLWMXRGaPRiOW816VAAAgAEAAIAAAACAAAAAAAAAAAAAAA==
+
+// psbt for bacon and jeans
+// cHNidP8BAFMBAAAAAY+G1NL1n96WC88aGpxMV7Rj+l7Bp7LYZcNbSC1dnjwQAAAAAAD+////AYQmAAAAAAAAF6kUBRnBIpsaszQf8OTCAzpZf1+rQMmHCeUkAAABAP0CAQIAAAAAAQGzoox1YhaYtK64X+8r+Wx81MvbrUogsYjM0NM40d8jGgEAAAAXFgAU5VzquRhTOMekY/DDmaOJ/izmnpT9////AhAnAAAAAAAAIgAgXC0bh2RNhhRSfnFXI1iuPWDDJ5wH48yjLlp9GBg1SSptFwMAAAAAABepFDLEQFzCw7ju4cqv8Ae8uL9KTSPGhwJHMEQCICO2qmAj0hh0m2NMkYYtXne0jymhuOfSVkERJdxnr3ocAiBNA5pLqECCxSDEWmrTIfDJsgDo+7j5urg344LHW0OElwEhA5nHzjpnBXAGd9XnHfE7THtWTEU0r2B8cqN4nPfoqUEVCeUkAAEBKxAnAAAAAAAAIgAgXC0bh2RNhhRSfnFXI1iuPWDDJ5wH48yjLlp9GBg1SSoBBUshA52U/v/31tZxTnZaCxYp2L1yXTIU1TBYdSmiBsonzUiYrGRVsmloIQL6p/MNuby2llIBG9P+SLj5BKnxJdUeK+ZK8f4V1PdAiawiBgL6p/MNuby2llIBG9P+SLj5BKnxJdUeK+ZK8f4V1PdAiRgStKcNVAAAgAEAAIAAAACAAAAAAAAAAAAiBgOdlP7/99bWcU52WgsWKdi9cl0yFNUwWHUpogbKJ81ImBiaaiWAVAAAgAEAAIAAAACAAAAAAAAAAAAAAA==
