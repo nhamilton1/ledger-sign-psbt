@@ -358,6 +358,11 @@ export class PsbtV2 {
     if (!buf.readSlice(5).equals(PSBT_MAGIC_BYTES)) {
       throw new Error('Invalid magic bytes');
     }
+
+    // debugger;
+    // while (this.readKeyPair(this.globalMap, buf)) {
+    //   console.log('globalMap', this.globalMap);
+    // }
     while (this.readKeyPair(this.globalMap, buf));
     for (let i = 0; i < this.getGlobalInputCount(); i++) {
       this.inputMaps[i] = new Map();

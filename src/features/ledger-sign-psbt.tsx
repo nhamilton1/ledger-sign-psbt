@@ -100,20 +100,20 @@ const LedgerImportButton: React.FC = () => {
       const psbt64BeforeSign = psbt.serialize().toString("base64");
       setPsbtBase64BeforeSig(psbt64BeforeSign);
 
-      const result = await app.signPsbt(psbt, policy_map, policyHmac);
+      // const result = await app.signPsbt(psbt, policy_map, policyHmac);
 
-      const signature = result[0]?.[2].toString("hex") ?? null;
-      const signatureBuffer = result[0]?.[2];
-      const pubkey = result[0]?.[1];
+      // const signature = result[0]?.[2].toString("hex") ?? null;
+      // const signatureBuffer = result[0]?.[2];
+      // const pubkey = result[0]?.[1];
 
-      psbt.setInputPartialSig(0, pubkey as Buffer, signatureBuffer as Buffer);
+      // psbt.setInputPartialSig(0, pubkey as Buffer, signatureBuffer as Buffer);
 
-      const psbt64 = psbt.serialize().toString("base64");
+      // const psbt64 = psbt.serialize().toString("base64");
 
-      setSignature(signature);
-      setPsbtBase64AfterSig(psbt64);
+      // setSignature(signature);
+      // setPsbtBase64AfterSig(psbt64);
 
-      console.log("ledger made psbt", psbt);
+      // console.log("ledger made psbt", psbt);
       setLoading(false);
       transport.close();
     } catch (err) {
