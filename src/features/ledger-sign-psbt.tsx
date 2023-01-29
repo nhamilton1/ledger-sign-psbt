@@ -2,6 +2,7 @@ import Transport from "@ledgerhq/hw-transport-webusb";
 import { useState } from "react";
 import { Psbt, networks } from "bitcoinjs-lib";
 import AppClient, { PsbtV2, WalletPolicy } from "../../bitcoin_client_js/src";
+import { resourceLimits } from "worker_threads";
 
 const LedgerImportButton: React.FC = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -25,7 +26,10 @@ const LedgerImportButton: React.FC = () => {
   });
 
   const other_key_info =
+    //bacon key
     "[9a6a2580/84'/1'/0']tpubDCMRAYcH71Gagskm7E5peNMYB5sKaLLwtn2c4Rb3CMUTRVUk5dkpsskhspa5MEcVZ11LwTcM7R5mzndUCG9WabYcT5hfQHbYVoaLFBZHPCi";
+  //jeans key
+  // "[12b4a70d/84'/1'/0']tpubDC6RYke2oWqmkt7UZrQiADdkT66fyJFRZMUWoHcD2W92BK6y7ZBS8oLRw6W66epPqPVisVFBnuCX214yieV2cq9jxdEYe1QJxxNoYZEi6Fb";
 
   const handleClick = async () => {
     setLoading(true);
@@ -49,7 +53,10 @@ const LedgerImportButton: React.FC = () => {
 
       const name = "Ledger PSBT Bounty";
       const description_template =
-        "wsh(and_v(or_c(pk(@1/**),v:older(5)),pk(@0/**)))";
+        //jeans key descriptor
+        "wsh(and_v(or_c(pk(@1/**),v:older(1)),pk(@0/**)))";
+      //bacon key descriptor
+      // "wsh(and_v(or_c(pk(@0/**),v:older(1)),pk(@1/**)))";
 
       const our_key_info = `[${fingerprint}/84'/1'/0']${xpub}`;
       const keys = [our_key_info, other_key_info];
@@ -58,21 +65,25 @@ const LedgerImportButton: React.FC = () => {
 
       const [policyId, policyHmac] = await app.registerWallet(policy_map);
 
+
       console.log(`Policy id: ${policyId.toString("hex")}`);
       console.log(`Policy hmac: ${policyHmac.toString("hex")}`);
       console.assert(policyId.compare(policy_map.getId()) == 0);
 
       const rawPsbtBase64: string | Buffer =
-        "cHNidP8BAFMBAAAAAY+G1NL1n96WC88aGpxMV7Rj+l7Bp7LYZcNbSC1dnjwQAAAAAAD+////AYQmAAAAAAAAF6kUBRnBIpsaszQf8OTCAzpZf1+rQMmHCeUkAAABAP0CAQIAAAAAAQGzoox1YhaYtK64X+8r+Wx81MvbrUogsYjM0NM40d8jGgEAAAAXFgAU5VzquRhTOMekY/DDmaOJ/izmnpT9////AhAnAAAAAAAAIgAgXC0bh2RNhhRSfnFXI1iuPWDDJ5wH48yjLlp9GBg1SSptFwMAAAAAABepFDLEQFzCw7ju4cqv8Ae8uL9KTSPGhwJHMEQCICO2qmAj0hh0m2NMkYYtXne0jymhuOfSVkERJdxnr3ocAiBNA5pLqECCxSDEWmrTIfDJsgDo+7j5urg344LHW0OElwEhA5nHzjpnBXAGd9XnHfE7THtWTEU0r2B8cqN4nPfoqUEVCeUkAAEBKxAnAAAAAAAAIgAgXC0bh2RNhhRSfnFXI1iuPWDDJ5wH48yjLlp9GBg1SSoBBUshA52U/v/31tZxTnZaCxYp2L1yXTIU1TBYdSmiBsonzUiYrGRVsmloIQL6p/MNuby2llIBG9P+SLj5BKnxJdUeK+ZK8f4V1PdAiawiBgL6p/MNuby2llIBG9P+SLj5BKnxJdUeK+ZK8f4V1PdAiRgStKcNVAAAgAEAAIAAAACAAAAAAAAAAAAiBgOdlP7/99bWcU52WgsWKdi9cl0yFNUwWHUpogbKJ81ImBiaaiWAVAAAgAEAAIAAAACAAAAAAAAAAAAAAA==";
+        "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";
 
       const rawPsbtBuffer = Buffer.from(rawPsbtBase64, "base64");
 
-      // Deserialize the raw PSBT
-      const psbt2 = Psbt.fromBuffer(rawPsbtBuffer, {
-        network: networks.testnet,
-      });
+      // // Deserialize the raw PSBT
+      // const psbt2 = Psbt.fromBuffer(rawPsbtBuffer, {
+      //   network: networks.testnet,
+      // });
 
-      const psbt = bitcoinlib_js_to_ledger(psbt2);
+      const psbtv2 = new PsbtV2();
+      psbtv2.deserialize(rawPsbtBuffer);
+
+      // const psbt = bitcoinlib_js_to_ledger(psbt2);
 
       if (!rawPsbtBase64) {
         console.log("Nothing to sign :(");
@@ -81,23 +92,60 @@ const LedgerImportButton: React.FC = () => {
         return;
       }
 
-      const psbt64BeforeSign = psbt.serialize().toString("base64");
-      setPsbtBase64BeforeSig(psbt64BeforeSign);
+      // const psbt64BeforeSign = psbtv2.serialize().toString("base64");
+      // setPsbtBase64BeforeSig(psbt64BeforeSign);
 
-      const result = await app.signPsbt(psbt, policy_map, policyHmac);
+      const results = await app.signPsbt(psbtv2, policy_map, policyHmac);
 
-      const signature = result[0]?.[2].toString("hex") ?? null;
-      const signatureBuffer = result[0]?.[2];
-      const pubkey = result[0]?.[1];
 
-      psbt.setInputPartialSig(0, pubkey as Buffer, signatureBuffer as Buffer);
+      let ledgerpayload = Array.from(results);
 
-      const psbt64 = psbt.serialize().toString("base64");
+
+
+      // This takes the signature result from the ledger library
+      // And puts all of the responses into a list of dictionarys
+      // of format:
+      // {"index":index,"pubkey":pubkey,"signature":signature}
+      const signatureDataList = [];
+      for (const anarray of ledgerpayload) {
+        const signatureData = {
+          "index": anarray[0],
+          "pubkey": anarray[1].toString('hex'),
+          "signature": anarray[2].toString('hex')
+        };
+        signatureDataList.push(signatureData);
+      }
+
+      console.log(JSON.stringify(signatureDataList))
+
+      // console.log(obj);
+
+      // for (let i = 0; i < result.length; i++) {
+      //   const a_signature = result[i]?.[2].toString("hex") ?? null;
+      //   const a_pubkey = result[i]?.[1].toString("hex") ?? null;
+      //   const a_index = result[i]?.[0].toString() ?? null;
+      //   let ledger_payload.i = { a_pubkey: a_signature };
+      // }
+      // const a_signature = result[0]?.[2].toString("hex") ?? null;
+      // const a_pubkey = result[0]?.[1].toString("hex") ?? null;
+      // const a_index = result[0]?.[0].toString() ?? null;
+
+      // console.log(`Index is : ${index}`);
+      // console.log(`Pubkey id: ${pubkey}`);
+      // console.log(`Signature id: ${signature}`);
+
+      // const signatureBuffer = result[0]?.[2];
+
+
+
+      // psbtv2.setInputPartialSig(0, pubkey as Buffer, signatureBuffer as Buffer);
+
+      const psbt64 = psbtv2.serialize().toString("base64");
 
       setSignature(signature);
       setPsbtBase64AfterSig(psbt64);
 
-      console.log("ledger made psbt", psbt);
+      console.log("ledger made psbt", psbtv2);
       setLoading(false);
       transport.close();
     } catch (err) {
@@ -197,23 +245,24 @@ const LedgerImportButton: React.FC = () => {
 export default LedgerImportButton;
 
 //pulled this from the bitcoin channel in the ledger discord
-const bitcoinlib_js_to_ledger = (psbtv0: Psbt) => {
-  const { inputCount, outputCount } =
-    psbtv0.data.globalMap.unsignedTx.getInputOutputCounts();
-  const psbtv2 = new PsbtV2();
-  psbtv2.setGlobalInputCount(inputCount);
-  psbtv2.setGlobalOutputCount(outputCount);
-  psbtv2.deserialize(psbtv0.toBuffer());
-  psbtv2.setGlobalPsbtVersion(2);
-  psbtv2.setGlobalTxVersion(psbtv0.version);
-  psbtv0.txInputs.forEach((input) => {
-    psbtv2.setInputPreviousTxId(input.index, input.hash);
-    psbtv2.setInputSequence(input.index, input?.sequence ?? 0);
-    psbtv2.setInputOutputIndex(input.index, input.index);
-  });
-  psbtv0.txOutputs.forEach((o, i) => {
-    psbtv2.setOutputAmount(i, o.value);
-    psbtv2.setOutputScript(i, o.script);
-  });
-  return psbtv2;
-};
+// const bitcoinlib_js_to_ledger = (psbtv0: Psbt) => {
+//   const { inputCount, outputCount } =
+//     psbtv0.data.globalMap.unsignedTx.getInputOutputCounts();
+//   const psbtv2 = new PsbtV2();
+//   psbtv2.setGlobalInputCount(inputCount);
+//   psbtv2.setGlobalOutputCount(outputCount);
+//   psbtv2.deserialize(psbtv0.toBuffer());
+//   psbtv2.setGlobalPsbtVersion(2);
+//   psbtv2.setGlobalTxVersion(psbtv0.version);
+//   psbtv0.txInputs.forEach((input) => {
+//     psbtv2.setInputPreviousTxId(input.index, input.hash);
+//     psbtv2.setInputSequence(input.index, input?.sequence ?? 0);
+//     psbtv2.setInputOutputIndex(input.index, input.index);
+//   });
+//   psbtv0.txOutputs.forEach((o, i) => {
+//     psbtv2.setOutputAmount(i, o.value);
+//     psbtv2.setOutputScript(i, o.script);
+//   });
+//   return psbtv2;
+// };
+
