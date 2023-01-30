@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-//@ts-nocheck
 import bippath from 'bip32-path'; // TODO: get rid of this dependency
 import bs58check from 'bs58check';
 
@@ -20,14 +18,14 @@ export function bip32asBuffer(path: string): Buffer {
 export function pathArrayToString(pathElements: readonly number[]): string {
   // bippath doesn't handle an empty path.
   if (pathElements.length == 0) {
-    return 'm';
+    return "m";
   }
   return bippath.fromPathArray(pathElements).toString();
 }
 
 export function pathStringToArray(path: string): readonly number[] {
   // bippath doesn't handle an empty path.
-  if (path == 'm' || path == '') {
+  if (path == "m" || path == "") {
     return [];
   }
   return bippath.fromString(path).toPathArray();

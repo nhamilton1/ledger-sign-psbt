@@ -81,7 +81,10 @@ export class AppClient {
    * @param display `false` to silently retrieve a pubkey for a standard path, `true` to display the path on screen
    * @returns the base58-encoded serialized extended pubkey (xpub)
    */
-  async getExtendedPubkey(path: string, display = false): Promise<string> {
+  async getExtendedPubkey(
+    path: string,
+    display: boolean = false
+  ): Promise<string> {
     const pathElements = pathStringToArray(path);
     if (pathElements.length > 6) {
       throw new Error('Path too long. At most 6 levels allowed.');
@@ -108,6 +111,7 @@ export class AppClient {
   async registerWallet(
     walletPolicy: WalletPolicy
   ): Promise<readonly [Buffer, Buffer]> {
+
     const clientInterpreter = new ClientCommandInterpreter();
 
     clientInterpreter.addKnownWalletPolicy(walletPolicy);
@@ -250,11 +254,8 @@ export class AppClient {
       // <inputIndex : varint> <pubkeyLen : 1 byte> <pubkey : pubkeyLen bytes (32 or 33)> <signature : variable length>
       const [inputIndex, inputIndexLen] = parseVarint(inputAndSig, 0);
       const pubkeyLen = inputAndSig[inputIndexLen];
-      const pubkey = inputAndSig.subarray(
-        inputIndexLen + 1,
-        inputIndexLen + 1 + pubkeyLen
-      );
-      const signature = inputAndSig.subarray(inputIndexLen + 1 + pubkeyLen);
+      const pubkey = inputAndSig.subarray(inputIndexLen + 1, inputIndexLen + 1 + pubkeyLen);
+      const signature = inputAndSig.subarray(inputIndexLen + 1 + pubkeyLen)
 
       ret.push([Number(inputIndex), pubkey, signature]);
     }
@@ -266,11 +267,8 @@ export class AppClient {
    * @returns the master key fingerprint as a string of 8 hexadecimal digits.
    */
   async getMasterFingerprint(): Promise<string> {
-    const fpr = await this.makeRequest(
-      BitcoinIns.GET_MASTER_FINGERPRINT,
-      Buffer.from([])
-    );
-    return fpr.toString('hex');
+    const fpr = await this.makeRequest(BitcoinIns.GET_MASTER_FINGERPRINT, Buffer.from([]));
+    return fpr.toString("hex");
   }
 
   /**
@@ -284,7 +282,10 @@ export class AppClient {
    * @param path the BIP-32 path of the key used to sign the message
    * @returns base64-encoded signature of the message.
    */
-  async signMessage(message: Buffer, path: string): Promise<string> {
+  async signMessage(
+    message: Buffer,
+    path: string
+  ): Promise<string> {
     const pathElements = pathStringToArray(path);
 
     const clientInterpreter = new ClientCommandInterpreter();
