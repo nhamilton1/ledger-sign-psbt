@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-
 import {
   BufferReader,
   BufferWriter,
@@ -9,6 +8,8 @@ import {
 import { sanitizeBigintToNumber } from './varint';
 
 export enum psbtGlobal {
+  PSBT_GLOBAL_UNSIGNED_TX = 0x00,
+  PSBT_GLOBAL_XPUB = 0x01,
   TX_VERSION = 0x02,
   FALLBACK_LOCKTIME = 0x03,
   INPUT_COUNT = 0x04,
@@ -22,6 +23,7 @@ export enum psbtIn {
   PARTIAL_SIG = 0x02,
   SIGHASH_TYPE = 0x03,
   REDEEM_SCRIPT = 0x04,
+  PSBT_IN_WITNESS_SCRIPT = 0x05,
   BIP32_DERIVATION = 0x06,
   FINAL_SCRIPTSIG = 0x07,
   FINAL_SCRIPTWITNESS = 0x08,
@@ -33,6 +35,7 @@ export enum psbtIn {
 }
 export enum psbtOut {
   REDEEM_SCRIPT = 0x00,
+  WITNESS_SCRIPT = 0x01,
   BIP_32_DERIVATION = 0x02,
   AMOUNT = 0x03,
   SCRIPT = 0x04,
@@ -75,6 +78,28 @@ export class PsbtV2 {
   setGlobalFallbackLocktime(locktime: number) {
     this.setGlobal(psbtGlobal.FALLBACK_LOCKTIME, uint32LE(locktime));
   }
+  setGlobalXpub(
+    extendedPubkey: Buffer,
+    masterFingerprint: Buffer,
+    pathElements: readonly number[]
+  ) {
+    const key = new Key(psbtGlobal.PSBT_GLOBAL_XPUB, extendedPubkey);
+    const pathElemsBuf = new BufferWriter();
+    for (const elem of pathElements) {
+      pathElemsBuf.writeUInt32(elem);
+    }
+    this.globalMap.set(
+      key.toString(),
+      Buffer.concat([masterFingerprint, pathElemsBuf.buffer()])
+    );
+  }
+  // TODO Add get global xpubs
+
+  setGlobalUnknownKeyVal(keyType: number, keyData: Buffer, value: Buffer) {
+    const key = new Key(keyType, keyData);
+    this.globalMap.set(key.toString(), value);
+  }
+
   getGlobalFallbackLocktime(): number | undefined {
     return this.getGlobalOptional(psbtGlobal.FALLBACK_LOCKTIME)?.readUInt32LE(
       0
@@ -190,6 +215,17 @@ export class PsbtV2 {
   getInputFinalScriptwitness(inputIndex: number): Buffer {
     return this.getInput(inputIndex, psbtIn.FINAL_SCRIPTWITNESS, b());
   }
+  setInputScriptwitness(inputIndex: number, scriptWitness: Buffer) {
+    this.setInput(
+      inputIndex,
+      psbtIn.PSBT_IN_WITNESS_SCRIPT,
+      b(),
+      scriptWitness
+    );
+  }
+  getInputScriptwitness(inputIndex: number): Buffer {
+    return this.getInput(inputIndex, psbtIn.PSBT_IN_WITNESS_SCRIPT, b());
+  }
   setInputPreviousTxId(inputIndex: number, txid: Buffer) {
     this.setInput(inputIndex, psbtIn.PREVIOUS_TXID, b(), txid);
   }
@@ -250,6 +286,12 @@ export class PsbtV2 {
   }
   getOutputRedeemScript(outputIndex: number): Buffer {
     return this.getOutput(outputIndex, psbtOut.REDEEM_SCRIPT, b());
+  }
+  setOutputWitnessScript(outputIndex: number, witenssScript: Buffer) {
+    this.setOutput(outputIndex, psbtOut.WITNESS_SCRIPT, b(), witenssScript);
+  }
+  getOutputWitnessScript(outputIndex: number): Buffer {
+    return this.getOutput(outputIndex, psbtOut.WITNESS_SCRIPT, b());
   }
   setOutputBip32Derivation(
     outputIndex: number,
@@ -364,6 +406,7 @@ export class PsbtV2 {
       while (this.readKeyPair(this.outputMaps[i], buf));
     }
   }
+
   private readKeyPair(map: Map<string, Buffer>, buf: BufferReader): boolean {
     const keyLen = sanitizeBigintToNumber(buf.readVarInt());
     if (keyLen == 0) {
@@ -560,7 +603,7 @@ function createKey(buf: Buffer): Key {
   return new Key(buf.readUInt8(0), buf.slice(1));
 }
 function serializeMap(buf: BufferWriter, map: ReadonlyMap<string, Buffer>) {
-  for (const k in map.keys) {
+  for (const k of map.keys()) {
     const value = map.get(k)!;
     const keyPair = new KeyPair(createKey(Buffer.from(k, 'hex')), value);
     keyPair.serialize(buf);

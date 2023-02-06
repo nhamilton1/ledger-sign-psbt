@@ -2,6 +2,9 @@ import Transport from "@ledgerhq/hw-transport-webusb";
 import { useState } from "react";
 import { Psbt, networks } from "bitcoinjs-lib";
 import AppClient, { PsbtV2, WalletPolicy } from "../../bitcoin_client_js/src";
+import { BufferReader } from "bitcoin_client_js/src/lib/buffertools";
+import { sanitizeBigintToNumber } from "bitcoin_client_js/src/lib/varint";
+import { pathStringToArray } from "bitcoin_client_js/src/lib/bip32";
 
 const LedgerImportButton: React.FC = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -72,7 +75,7 @@ const LedgerImportButton: React.FC = () => {
         network: networks.testnet,
       });
 
-      const psbt = bitcoinlib_js_to_ledger(psbt2);
+      const psbt = convertPsbtv0ToV2(psbt2);
 
       if (!rawPsbtBase64) {
         console.log("Nothing to sign :(");
@@ -196,24 +199,105 @@ const LedgerImportButton: React.FC = () => {
 
 export default LedgerImportButton;
 
-//pulled this from the bitcoin channel in the ledger discord
-const bitcoinlib_js_to_ledger = (psbtv0: Psbt) => {
-  const { inputCount, outputCount } =
-    psbtv0.data.globalMap.unsignedTx.getInputOutputCounts();
+const MAX_NSEQUENCE = 0xffffffff - 1;
+
+export function convertPsbtv0ToV2(psbtv0: Psbt): PsbtV2 {
   const psbtv2 = new PsbtV2();
-  psbtv2.setGlobalInputCount(inputCount);
-  psbtv2.setGlobalOutputCount(outputCount);
-  psbtv2.deserialize(psbtv0.toBuffer());
-  psbtv2.setGlobalPsbtVersion(0);
-  psbtv2.setGlobalTxVersion(psbtv0.version);
-  psbtv0.txInputs.forEach((input) => {
-    psbtv2.setInputPreviousTxId(input.index, input.hash);
-    psbtv2.setInputSequence(input.index, input?.sequence ?? 0);
-    psbtv2.setInputOutputIndex(input.index, input.index);
-  });
-  psbtv0.txOutputs.forEach((o, i) => {
-    psbtv2.setOutputAmount(i, o.value);
-    psbtv2.setOutputScript(i, o.script);
-  });
+  const psbtv0GlobalMap = psbtv0.data.globalMap;
+
+  // Set tx version and psbt version
+  psbtv2.setGlobalTxVersion(1);
+  psbtv2.setGlobalPsbtVersion(2);
+
+  // Set global input / output counts
+  psbtv2.setGlobalInputCount(psbtv0.data.inputs.length);
+  psbtv2.setGlobalOutputCount(psbtv0.data.outputs.length);
+  // Global fall back time
+  psbtv2.setGlobalFallbackLocktime(0);
+
+  // Add global xpubs
+  for (const globalXpub of psbtv0GlobalMap.globalXpub ?? []) {
+    psbtv2.setGlobalXpub(
+      globalXpub.extendedPubkey,
+      globalXpub.masterFingerprint,
+      pathStringToArray(globalXpub.path)
+    );
+  }
+
+  // Other unknown global properties
+  for (const globalProperty of psbtv0GlobalMap.unknownKeyVals ?? []) {
+    const keyLenBufferReader = new BufferReader(globalProperty.key);
+    const keyLen = sanitizeBigintToNumber(keyLenBufferReader.readVarInt());
+    if (keyLen == 0) {
+      throw new Error("Failed to convert PSBT. Invalid key length");
+    }
+    const keyType = keyLenBufferReader.readUInt8();
+    const keyData = keyLenBufferReader.readSlice(keyLen - 1);
+    psbtv2.setGlobalUnknownKeyVal(keyType, keyData, globalProperty.value);
+  }
+
+  // Add inputs
+  for (const [index, input] of psbtv0.data.inputs.entries()) {
+    if (input.nonWitnessUtxo) {
+      psbtv2.setInputNonWitnessUtxo(index, input.nonWitnessUtxo);
+    }
+    if (input.witnessUtxo) {
+      // Amount is 64 bit uint LE
+      const amount = Buffer.alloc(8, 0);
+
+      // breaking here: amount.writeBigUInt64LE is not a function...
+      amount.writeBigUInt64LE(BigInt(input.witnessUtxo.value));
+      psbtv2.setInputWitnessUtxo(index, amount, input.witnessUtxo?.script);
+    }
+    if (input.redeemScript) {
+      psbtv2.setInputRedeemScript(index, input.redeemScript);
+    }
+    if (input.witnessScript) {
+      psbtv2.setInputScriptwitness(index, input.witnessScript);
+    }
+    if (input.bip32Derivation) {
+      for (const bip32 of input.bip32Derivation) {
+        psbtv2.setInputBip32Derivation(
+          index,
+          bip32.pubkey,
+          bip32.masterFingerprint,
+          pathStringToArray(bip32.path)
+        );
+      }
+    }
+  }
+
+  // Add input nsequence, vout, and prev txid
+  for (const [index, input] of psbtv0.txInputs.entries()) {
+    psbtv2.setInputSequence(index, input.sequence ?? MAX_NSEQUENCE);
+    psbtv2.setInputPreviousTxId(index, input.hash);
+    psbtv2.setInputOutputIndex(index, input.index);
+  }
+
+  // Add output value and script
+  for (const [index, output] of psbtv0.txOutputs.entries()) {
+    psbtv2.setOutputAmount(index, output.value);
+    psbtv2.setOutputScript(index, output.script);
+  }
+
+  for (const [index, output] of psbtv0.data.outputs.entries()) {
+    if (output.bip32Derivation) {
+      for (const bip32 of output.bip32Derivation) {
+        psbtv2.setOutputBip32Derivation(
+          index,
+          bip32.pubkey,
+          bip32.masterFingerprint,
+          pathStringToArray(bip32.path)
+        );
+      }
+    }
+    if (output.redeemScript) {
+      psbtv2.setOutputRedeemScript(index, output.redeemScript);
+    }
+    if (output.witnessScript) {
+      psbtv2.setOutputWitnessScript(index, output.witnessScript);
+    }
+  }
+
   return psbtv2;
-};
+}
